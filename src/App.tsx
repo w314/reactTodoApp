@@ -22,9 +22,10 @@ function App() {
     { type: 'add', payload: string } |
     // delete needs the id of the task
     { type: 'delete', payload: string} |
-    // toggle will use the task object itself
+    // toggle needs the id of the task
+    //will use the task object itself
     // to ge acess to both the id and the name
-    { type: 'toggle', payload: Task}
+    { type: 'toggle', payload: string}
   
   // define reducer function
   const taskReducer = (state: typeof initialState, action: ACTIONTYPE) => {
@@ -42,20 +43,15 @@ function App() {
           {tasks: state.tasks.filter(task => task.id != action.payload)}
         )
       case 'toggle':
-        // get index of element to be changed
-        const index = state.tasks.indexOf(action.payload)
-        return (
-          // use spread instead of changing the element at the index
-          // to change the state and force page refresh
-          // prefer this method instead of first filtering all items that 
-          // will not change and adding the new element at the end
-          // as that method changes the order of the tasks in the array
-          {tasks: [...state.tasks.slice(0, index), {
-            id: action.payload.id,
-            name: action.payload.name,
-            completed: !action.payload.completed
-          }, ...state.tasks.slice(index + 1, state.tasks.length)]} 
-        )
+        // use map to go through tasks 
+        return {tasks: state.tasks.map(task => {
+          if( task.id == action.payload ) {
+            // use sread as using task.completed = does not refresh page
+            return {...task, completed: !task.completed}
+          } else {
+            return task
+          }
+        })}
       default:
         throw new Error()
     }
@@ -96,7 +92,7 @@ function App() {
         return (
           <Task key={task.id}>
             <TaskName {...task}>{task.name}</TaskName>
-            <button onClick={() => dispatch({type: 'toggle', payload: task})}>Toggle Completed Status</button>
+            <button onClick={() => dispatch({type: 'toggle', payload: task.id})}>Toggle Completed Status</button>
             <button onClick={() => dispatch({type: 'delete', payload: task.id})}>Delete</button>
           </Task>
         )

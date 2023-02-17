@@ -1,5 +1,6 @@
 import { useRef, useReducer } from 'react'
 import { v4 as uuidv4 } from 'uuid'
+import styled from '@emotion/styled'
 
 function App() {
 
@@ -16,10 +17,14 @@ function App() {
   const initialState = { tasks: [] as Task[] }
 
   // define action types
-  type ACTIONTYPE = 
+  type ACTIONTYPE =
+    // add only needs the name of the new task 
     { type: 'add', payload: string } |
+    // delete needs the id of the task
     { type: 'delete', payload: string} |
-    { type: 'toggle', payload: string}
+    // toggle will use the task object itself
+    // to ge acess to both the id and the name
+    { type: 'toggle', payload: Task}
   
   // define reducer function
   const taskReducer = (state: typeof initialState, action: ACTIONTYPE) => {
@@ -35,6 +40,21 @@ function App() {
       case 'delete':
         return (
           {tasks: state.tasks.filter(task => task.id != action.payload)}
+        )
+      case 'toggle':
+        // get index of element to be changed
+        const index = state.tasks.indexOf(action.payload)
+        return (
+          // use spread instead of changing the element at the index
+          // to change the state and force page refresh
+          // prefer this method instead of first filtering all items that 
+          // will not change and adding the new element at the end
+          // as that method changes the order of the tasks in the array
+          {tasks: [...state.tasks.slice(0, index), {
+            id: action.payload.id,
+            name: action.payload.name,
+            completed: !action.payload.completed
+          }, ...state.tasks.slice(index + 1, state.tasks.length)]} 
         )
       default:
         throw new Error()
@@ -65,7 +85,7 @@ function App() {
     }
 
   return (
-    <>
+    <Container>
       <h1>Todo Application</h1>
       <form onSubmit={addTask}>
         <input type="text" ref={nameInput}/>
@@ -74,18 +94,38 @@ function App() {
       <h2>Task List</h2>
       {state.tasks.map(task => {
         return (
-          <div key={task.id}>
-            {task.name}
-            <button>Toggle Completed Status</button>
+          <Task key={task.id}>
+            <TaskName {...task}>{task.name}</TaskName>
+            <button onClick={() => dispatch({type: 'toggle', payload: task})}>Toggle Completed Status</button>
             <button onClick={() => dispatch({type: 'delete', payload: task.id})}>Delete</button>
-          </div>
+          </Task>
         )
 
       })}
-    </>
+    </Container>
   )
 }
 
 
 // STYLED ELEMENTS
+const Container = styled.div`
+  max-width: 800px;
+  margin: 50px auto;
+`
+
+const Task = styled.div`
+  margin-bottom: 20px;
+  display: grid;
+  grid-template-columns: 3fr 2fr 1fr;
+  gap: 10px;
+`
+
+type TaskNameProps = {
+  completed: boolean
+}
+
+const TaskName = styled.p<TaskNameProps>`
+  color: ${props => props.completed ? "lightgray" : "black"}
+`
+
 export default App

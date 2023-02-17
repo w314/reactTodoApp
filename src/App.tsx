@@ -5,20 +5,23 @@ function App() {
 
   console.log('rendering')
 
+  // define Task type
   type Task = {
     id: string,
     name: string,
     completed: boolean
   }
 
+  // define initial state
   const initialState = { tasks: [] as Task[] }
 
+  // define action types
   type ACTIONTYPE = 
-    { type: 'add', payload: string } 
-    // |
-    // { type: 'delete', payload: string} |
-    // { type: 'toggle', payload: string}
+    { type: 'add', payload: string } |
+    { type: 'delete', payload: string} |
+    { type: 'toggle', payload: string}
   
+  // define reducer function
   const taskReducer = (state: typeof initialState, action: ACTIONTYPE) => {
     switch(action.type) {
       case 'add':
@@ -29,24 +32,28 @@ function App() {
             completed: false
           }]}
         )
+      case 'delete':
+        return (
+          {tasks: state.tasks.filter(task => task.id != action.payload)}
+        )
       default:
         throw new Error()
     }
   }
 
+  // create state variable
   const [state, dispatch] = useReducer(taskReducer, initialState)
 
-
+  // create reference to name input field
   const nameInput = useRef<HTMLInputElement>(null)
   
-
 
   function addTask(event: React.FormEvent) {
     // call preventDefault() to avoid page rerendering
     event.preventDefault()
-    console.log(`${nameInput.current?.value} task added`)
+    // if input field is empty return
     if (!nameInput.current) return
-    // add task
+    // add task 
     dispatch({type: 'add', payload: nameInput.current.value})
     // clear input field
     nameInput.current
@@ -69,6 +76,8 @@ function App() {
         return (
           <div key={task.id}>
             {task.name}
+            <button>Toggle Completed Status</button>
+            <button onClick={() => dispatch({type: 'delete', payload: task.id})}>Delete</button>
           </div>
         )
 
@@ -76,4 +85,7 @@ function App() {
     </>
   )
 }
+
+
+// STYLED ELEMENTS
 export default App
